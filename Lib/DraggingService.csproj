@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>DragnDrop</PackageId>
+		<Version>1.1.0</Version>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Authors>FiabioProjects</Authors>
+		<Description>Minimal Drag and Drop Service UI library</Description>
+		<PackageOutputPath>..\LocalPackages</PackageOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <WarningLevel>9999</WarningLevel>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <WarningLevel>9999</WarningLevel>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<PackageReference Include="Avalonia" Version="11.3.2" PrivateAssets="all" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" PrivateAssets="all" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" PrivateAssets="all" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" PrivateAssets="all" />
+	</ItemGroup>
+</Project>

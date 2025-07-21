@@ -1,0 +1,82 @@
+<UserControl
+    x:Class="AvaloniaApplication1.Demo.Views.MainView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ds="clr-namespace:DraggingService;assembly=DraggingService"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:AvaloniaApplication1.Demo.ViewModels"
+    x:Name="DemoRoot"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:MainViewModel"
+    mc:Ignorable="d">
+    <Design.DataContext>
+
+        <vm:MainViewModel />
+    </Design.DataContext>
+    <Grid ColumnDefinitions="70*,30*">
+        <Grid
+            x:Name="MainGrid"
+            Grid.Column="0"
+            ds:DraggingServiceAttached.AllowDrag="{Binding DragCallback}"
+            ds:DraggingServiceAttached.IsRootOfDraggingInstance="True"
+            Background="AliceBlue"
+            ColumnDefinitions="*,*,*, *">
+            <TextBlock
+                x:Name="T1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ds:DraggingServiceAttached.AllowDrop="{Binding DropCallback}"
+                Background="Red"
+                Foreground="Black"
+                Text="{Binding Greeting}" />
+
+            <StackPanel
+                x:Name="BreakingTest"
+                Grid.Column="1"
+                Background="Fuchsia">
+                <TextBlock
+                    x:Name="T2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ds:DraggingServiceAttached.AllowDrag="{Binding DragCallback}"
+                    Background="Blue"
+                    Foreground="Black"
+                    PointerPressed="TextBlock_PointerPressed"
+                    Text="{Binding Greeting}" />
+                <TextBlock
+                    x:Name="T3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="Red"
+                    Foreground="Black"
+                    Text="{Binding Greeting}" />
+            </StackPanel>
+            <DockPanel x:Name="Last" Grid.Column="2">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Foreground="Black">aaaa</TextBlock>
+                    </DockPanel>
+                </StackPanel>
+
+                <StackPanel Background="Blue">
+                    <TextBlock>BBBB</TextBlock>
+                </StackPanel>
+                <GridSplitter />
+                <ContentControl />
+            </DockPanel>
+            <StackPanel
+                x:Name="StackText"
+                Grid.Column="3"
+                Background="Red" />
+        </Grid>
+        <StackPanel Grid.Column="1" Background="Black">
+            <Button
+                Background="BlanchedAlmond"
+                Click="SetIsRootToFalse"
+                Content="DISPOSE ROOT" />
+        </StackPanel>
+    </Grid>
+
+</UserControl>

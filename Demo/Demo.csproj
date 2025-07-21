@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.2" />
+	</ItemGroup>
+
+	<!-- Reference the library project directly in Debug -->
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\Lib\DraggingService.csproj" />
+	</ItemGroup>
+
+	<!-- Use the NuGet package in Release -->
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<PackageReference Include="DragnDrop" Version="1.1.0" />
+	</ItemGroup>
+</Project>
