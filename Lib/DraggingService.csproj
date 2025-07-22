@@ -1,25 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>DragnDrop</PackageId>
-		<Version>1.1.0</Version>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Version>1.0.0</Version>
 		<Authors>FiabioProjects</Authors>
 		<Description>Minimal Drag and Drop Service UI library</Description>
 		<PackageOutputPath>..\LocalPackages</PackageOutputPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <WarningLevel>9999</WarningLevel>
-	</PropertyGroup>
+		<WarningLevel>9999</WarningLevel>
+	</PropertyGroup> 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <WarningLevel>9999</WarningLevel>
+		<WarningLevel>9999</WarningLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="..\License.txt" Pack="true" PackagePath="" />
+		<None Include="..\README.md" Pack="true" PackagePath="" />
 		<PackageReference Include="Avalonia" Version="11.3.2" PrivateAssets="all" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" PrivateAssets="all" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" PrivateAssets="all" />
