@@ -10,7 +10,7 @@ namespace DraggingService;
 /// <param name="pointerEvent">The pointer event that triggered the drop.</param>
 /// <param name="draggedControls">The collection of controls being dragged.</param>
 /// <param name="dropTarget">The control where the drop occurred.</param>
-public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, ICollection<Control> draggedControls, Control dropTarget) {
+public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IReadOnlyCollection<Control> draggedControls, Control dropTarget) {
   /// <summary>
   /// The pointer event that triggered the drop.
   /// </summary>
@@ -19,7 +19,7 @@ public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IColl
   /// <summary>
   /// The controls that were dragged during the operation.
   /// </summary>
-  public readonly ICollection<Control> DraggedControls = draggedControls;
+  public readonly IReadOnlyCollection<Control> DraggedControls = draggedControls;
 
   /// <summary>
   /// The control that accepted the drop.
@@ -32,7 +32,7 @@ public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IColl
 /// </summary>
 /// <param name="pointerEvent">The pointer event that triggered the drag.</param>
 /// <param name="draggedControls">The collection of controls being dragged.</param>
-public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, ICollection<Control> draggedControls) {
+public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, IReadOnlyCollection<Control> draggedControls) {
   /// <summary>
   /// The pointer event that initiated or continues the drag.
   /// </summary>
@@ -41,7 +41,7 @@ public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, IColl
   /// <summary>
   /// The controls that are currently being dragged.
   /// </summary>
-  public readonly ICollection<Control> DraggedControls = draggedControls;
+  public readonly IReadOnlyCollection<Control> DraggedControls = draggedControls;
 }
 
 /// <summary>
@@ -58,6 +58,7 @@ public class DraggingServiceInstanceWrapper {
   /// </summary>
   public readonly int DepthFromRoot;
 
+
   /// <summary>
   /// Initializes a new instance of the <see cref="DraggingServiceInstanceWrapper"/> class.
   /// </summary>
@@ -67,6 +68,8 @@ public class DraggingServiceInstanceWrapper {
     Instance = instance;
     DepthFromRoot = depthFromRoot;
   }
+
+
 }
 
 /// <summary>

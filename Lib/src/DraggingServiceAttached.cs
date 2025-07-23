@@ -56,12 +56,15 @@ public class DraggingServiceAttached {
     if( e.NewValue is not DraggingServiceDropEvent dse ) {
       return;
     }
+
     DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
     instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
     if( instanceRecord == null )
       throw new InvalidOperationException("Can't set AllowDropProperty on: " + nameof(control) + " instance root not found");
-    control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
-    instanceRecord.Instance.AllowDrop(control, instanceRecord.DepthFromRoot);
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+      instanceRecord.Instance.AllowDrop(control, instanceRecord.DepthFromRoot);
+    }
   }
   private static void OnAllowDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
     if( e.NewValue is not DraggingServiceDragEvent dse ) {
@@ -71,9 +74,10 @@ public class DraggingServiceAttached {
     instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
     if( instanceRecord == null )
       throw new InvalidOperationException("Can't set AllowDragProperty on: " + nameof(control) + " instance root not found");
-    control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
-    instanceRecord.Instance.AllowDrag(control);
-
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+      instanceRecord.Instance.AllowDrag(control);
+    }
   }
 
 
@@ -106,9 +110,9 @@ public class DraggingServiceAttached {
 
   internal static void CleanProperties(Control control) {
 
+    control.ClearValue(IsRootOfDraggingInstanceProperty);
     control.ClearValue(AllowDropProperty);
     control.ClearValue(AllowDragProperty);
-    control.ClearValue(IsRootOfDraggingInstanceProperty); //important to clear these 2 properties last
-    control.ClearValue(DraggingServiceInstanceProperty);
+    control.ClearValue(DraggingServiceInstanceProperty);   //important, this has to be the last property to clear, otherwise the instance will not be disposed properly
   }
 }

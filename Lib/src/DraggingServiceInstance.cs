@@ -3,30 +3,29 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace DraggingService;
+//todo handle the clearing in the ghostcontainer, improve constructor and fix the disposing dragging service bug
 
 /// <summary>
 /// Manages the drag-and-drop logic for controls within a designated root panel.
 /// </summary>
 public class DraggingServiceInstance: IDisposable {
   private bool _disposed = false;
+  internal bool IsDisposing { get; private set; } // This is used to prevent attached props calls when the instance is being disposed
   private readonly Panel _root;
   private readonly Cursor? _defaultCursor;
-  private readonly Canvas _ghostContainer = new Canvas {
-    Background = Brushes.Transparent,
+  private readonly GhostContainer _ghostContainer = new GhostContainer {
     IsVisible = false,
     IsHitTestVisible = false,
     ZIndex = Int32.MaxValue, // Ensure the ghost container is always on top of other controls
   };
   private Control? _droppingTo = null;
   private readonly List<(Control, int)> _dropAllowedControlsSorted = []; // This list is used to sort the controls by distance to the root for hit testing purposes
-  private readonly HashSet<Control> _draggingControls = [];         // This is the collection of controls that are currently being dragged (useful because under the hood the dragging objects are images)
 
   /// <summary>
   /// Initializes a new instance of the <see cref="DraggingServiceInstance"/> class.
@@ -36,21 +35,20 @@ public class DraggingServiceInstance: IDisposable {
   public DraggingServiceInstance(Panel panel, double GhostOpacity = 0.75) {
     GetInstanceRootDistance(panel); // Ensure the panel is the root of the dragging service instance and get the distance to the root
     SetBackgroundAndHitTesting(panel);
-    _ghostContainer.Background = Brushes.Transparent;
-    panel.Children.Add(_ghostContainer);
     _ghostContainer.Opacity = GhostOpacity;
     _root = panel;
     _defaultCursor = _root.Cursor;
-    //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Tunneling handlers are called before. So the last parameter could be false.
+    //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Bubblinh handlers are called at the end. 
     panel.AddHandler(Panel.PointerMovedEvent, Drag, RoutingStrategies.Bubble, true);
     panel.AddHandler(Panel.PointerReleasedEvent, EndDrag, RoutingStrategies.Bubble, true);
-    panel.PointerExited += (s, e) => {
-      if( DraggingControlsCount() > 0 ) {
-        e.Pointer.Capture(_root);  //this is needed to listen to call EndDrag when the pointer is outside the root bounds (in the Drag method the pointer capture is released)
-      }
-    };
+    panel.AddHandler(Panel.PointerEnteredEvent, OnPointerEntered, RoutingStrategies.Direct, true);
+    _root.Children.Add(_ghostContainer);
   }
-
+  private void OnPointerEntered(object? sender, PointerEventArgs e) {
+    if( _ghostContainer.DraggingControls.Count > 0 ) {
+      e.Pointer.Capture(_root);  //this is needed to listen to call EndDrag when the pointer is outside the root bounds (in the Drag method the pointer capture is released)
+    }
+  }
   private void Drag(object? sender, PointerEventArgs e) {
     static bool IsDescendantOf(StyledElement? child, StyledElement ancestor) {
       StyledElement? ptr = child;
@@ -60,7 +58,7 @@ public class DraggingServiceInstance: IDisposable {
       return ptr == ancestor;
     }
 
-    if( DraggingControlsCount() == 0 ) {
+    if( _ghostContainer.DraggingControls.Count == 0 ) {
       return;
     }
     if( _root.InputHitTest(e.GetPosition(_root)) is not Control controlUnderPointer ) {  //if the pointer is outside the root bounds, we don't do anything
@@ -70,12 +68,9 @@ public class DraggingServiceInstance: IDisposable {
       EndDrag(sender, e);
       return;
     }
-
     e.Pointer.Capture(null); //little workaround to allow cursor styling
-    _ghostContainer.Width = _root.Bounds.Width;
-    _ghostContainer.Height = _root.Bounds.Height;
     _ghostContainer.IsVisible = true;
-    _ghostContainer.RenderTransform = new TranslateTransform(e.GetPosition(_root).X, e.GetPosition(_root).Y);
+    _ghostContainer.Render(new Size(_root.Bounds.Width, _root.Bounds.Height), e.GetPosition(_root));
     _root.Cursor = new Cursor(StandardCursorType.No);
     _droppingTo = null;
 
@@ -90,11 +85,11 @@ public class DraggingServiceInstance: IDisposable {
   private void EndDrag(object? sender, PointerEventArgs e) {
     if( _droppingTo != null && _root.InputHitTest(e.GetPosition(_root)) != null ) {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.AllowDropProperty);
-      callback.Invoke(new DraggingServiceDropEventsArgs(e, _draggingControls, _droppingTo));
+      callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo));
     }
     _ghostContainer.IsVisible = false;
     _root.Cursor = _defaultCursor;
-    ClearDraggingControls();
+    _ghostContainer.ClearDraggingControls();
     _droppingTo = null;
     e.Pointer.Capture(null);
   }
@@ -104,22 +99,9 @@ public class DraggingServiceInstance: IDisposable {
       return;
     if( !control.IsVisible || !control.IsAttachedToVisualTree() )
       throw new InvalidOperationException(nameof(control) + " Control must be visible and attached to the visual tree to be dragged.");
-    if( !_draggingControls.Add(control) )
-      throw new InvalidOperationException(nameof(control) + " Control already added for dragging.");
     if( control.Bounds.Width <= 0 || control.Bounds.Height <= 0 ) {
       throw new InvalidOperationException("Control must have a non-zero size to be dragged.");
     }
-
-    static RenderTargetBitmap BitmapRenderingWorkaround(Control control) {
-      Rect originalBounds = control.Bounds;
-      control.Arrange(new Rect(0, 0, originalBounds.Width, originalBounds.Height));
-      var pixelSize = new PixelSize(( int ) control.Bounds.Width, ( int ) control.Bounds.Height);
-      var bmp = new RenderTargetBitmap(pixelSize);
-      bmp.Render(control);
-      control.Arrange(originalBounds);
-      return bmp;
-    }
-
     static StyledElement FindSubRootControl(Control control, Panel root) {
       if( control == root )
         return root;
@@ -135,16 +117,10 @@ public class DraggingServiceInstance: IDisposable {
     var subRoot = FindSubRootControl(control, _root);
     if( subRoot is not Control c )
       throw new InvalidOperationException("Sub-root control must be a Control type.");
-    var bmp = BitmapRenderingWorkaround(control);
-    Image ghost = new Image {
-      Width = control.Bounds.Width,
-      Height = control.Bounds.Height,
-      Source = bmp,
-    };
-    Canvas.SetLeft(ghost, c.Bounds.X);
-    Canvas.SetTop(ghost, c.Bounds.Y);
-    _ghostContainer.Children.Add(ghost);
-    control.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, _draggingControls));
+
+    _ghostContainer.AddChild(control, new Point(c.Bounds.X, c.Bounds.Y));   //this throws If the control is already added to the ghost container
+
+    control.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
     e.Handled = true;
   }
 
@@ -185,9 +161,7 @@ public class DraggingServiceInstance: IDisposable {
   /// <summary>
   /// Gets the number of controls currently being dragged.
   /// </summary>
-  public int DraggingControlsCount() {
-    return _draggingControls.Count;
-  }
+
 
   private static (Panel, int) GetInstanceRootDistance(StyledElement child) {
     int height = 0;
@@ -201,18 +175,6 @@ public class DraggingServiceInstance: IDisposable {
     return (root, height);
   }
 
-  private void ClearDraggingControls() {
-    foreach( Control ghost in _ghostContainer.Children ) {
-      if( ghost is not Image ghostImage )
-        throw new InvalidOperationException("Ghost container should only contain Image controls.");
-      if( ghostImage.Source is IDisposable bitmap ) {
-        ghostImage.Source = null;
-        bitmap.Dispose();
-      }
-    }
-    _draggingControls.Clear();
-    _ghostContainer.Children.Clear();
-  }
 
   /// <summary>
   /// Disposes the dragging service and releases its resources.
@@ -222,6 +184,7 @@ public class DraggingServiceInstance: IDisposable {
       Console.WriteLine("Trying to forcefully dispose a root element of the dragging service instance. Set IsRootOfDraggingInstanceProperty attached property to root instead ");
       return;
     }
+    IsDisposing = true; // This is used to prevent attached props calls when the instance is being disposed
     Dispose(true);
     GC.SuppressFinalize(this);
   }
@@ -245,10 +208,11 @@ public class DraggingServiceInstance: IDisposable {
       _root.RemoveHandler(Panel.PointerMovedEvent, Drag);
       _root.RemoveHandler(Panel.PointerReleasedEvent, EndDrag);
       _root.RemoveHandler(Control.PointerPressedEvent, StartControlDragging);
+      _root.RemoveHandler(Panel.PointerEnteredEvent, OnPointerEntered);
       foreach( Control c in _root.Children ) {
         CleanupControl(c, StartControlDragging);
       }
-      ClearDraggingControls();
+      _ghostContainer.ClearDraggingControls();
       _dropAllowedControlsSorted.Clear();
     }
 
