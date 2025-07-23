@@ -11,6 +11,16 @@ internal class GhostContainer: Canvas {
   public IReadOnlyCollection<Control> DraggingControls => _draggingControls;
 
   private Point _lastAddedAt = new Point(0, 0); // This is used to store the last position where a control was added to the ghost container
+
+  public GhostContainer() {
+    // Set the default properties for the ghost container
+    Background = Brushes.Transparent;
+    IsVisible = false;
+    IsHitTestVisible = false;
+    ZIndex = Int32.MaxValue;
+    IsHitTestVisible = false;
+    ClipToBounds = true;
+  }
   protected override void ArrangeCore(Rect finalRect) {
     base.ArrangeCore(new Rect(0, 0, Width, Height));  //Width and Height are set by the DraggingServiceInstance to match exactly the size of the root
   }

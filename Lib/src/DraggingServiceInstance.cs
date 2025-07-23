@@ -9,8 +9,6 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace DraggingService;
-//todo handle the clearing in the ghostcontainer, improve constructor and fix the disposing dragging service bug
-
 /// <summary>
 /// Manages the drag-and-drop logic for controls within a designated root panel.
 /// </summary>
@@ -19,11 +17,7 @@ public class DraggingServiceInstance: IDisposable {
   internal bool IsDisposing { get; private set; } // This is used to prevent attached props calls when the instance is being disposed
   private readonly Panel _root;
   private readonly Cursor? _defaultCursor;
-  private readonly GhostContainer _ghostContainer = new GhostContainer {
-    IsVisible = false,
-    IsHitTestVisible = false,
-    ZIndex = Int32.MaxValue, // Ensure the ghost container is always on top of other controls
-  };
+  private readonly GhostContainer _ghostContainer = new GhostContainer();
   private Control? _droppingTo = null;
   private readonly List<(Control, int)> _dropAllowedControlsSorted = []; // This list is used to sort the controls by distance to the root for hit testing purposes
 
@@ -38,7 +32,7 @@ public class DraggingServiceInstance: IDisposable {
     _ghostContainer.Opacity = GhostOpacity;
     _root = panel;
     _defaultCursor = _root.Cursor;
-    //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Bubblinh handlers are called at the end. 
+    //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Bubbling handlers are called at the end. 
     panel.AddHandler(Panel.PointerMovedEvent, Drag, RoutingStrategies.Bubble, true);
     panel.AddHandler(Panel.PointerReleasedEvent, EndDrag, RoutingStrategies.Bubble, true);
     panel.AddHandler(Panel.PointerEnteredEvent, OnPointerEntered, RoutingStrategies.Direct, true);
@@ -181,7 +175,7 @@ public class DraggingServiceInstance: IDisposable {
   /// </summary>
   public void Dispose() {
     if( _root.GetValue(DraggingServiceAttached.IsRootOfDraggingInstanceProperty) ) {
-      Console.WriteLine("Trying to forcefully dispose a root element of the dragging service instance. Set IsRootOfDraggingInstanceProperty attached property to root instead ");
+      Console.WriteLine("Trying to forcefully dispose am element of the dragging service instance. Set IsRootOfDraggingInstanceProperty attached property to false in the root instead ");
       return;
     }
     IsDisposing = true; // This is used to prevent attached props calls when the instance is being disposed
@@ -190,14 +184,14 @@ public class DraggingServiceInstance: IDisposable {
   }
 
   protected virtual void Dispose(bool disposing) {
-    static void CleanupControl(Control c, Action<object?, PointerPressedEventArgs> dragStartHandler) {
+    void CleanupControl(Control c) {
       if( c == null )
         return;
-      c.RemoveHandler(Control.PointerPressedEvent, dragStartHandler);
+      c.RemoveHandler(Control.PointerPressedEvent, StartControlDragging);
       DraggingServiceAttached.CleanProperties(c);
       foreach( Visual child in c.GetVisualChildren() ) {
         if( child is Control childC ) {
-          CleanupControl(childC, dragStartHandler);
+          CleanupControl(childC);
         }
       }
     }
@@ -210,7 +204,7 @@ public class DraggingServiceInstance: IDisposable {
       _root.RemoveHandler(Control.PointerPressedEvent, StartControlDragging);
       _root.RemoveHandler(Panel.PointerEnteredEvent, OnPointerEntered);
       foreach( Control c in _root.Children ) {
-        CleanupControl(c, StartControlDragging);
+        CleanupControl(c);
       }
       _ghostContainer.ClearDraggingControls();
       _dropAllowedControlsSorted.Clear();
