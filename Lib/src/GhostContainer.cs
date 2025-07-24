@@ -34,11 +34,15 @@ internal class GhostContainer: Canvas {
       //if the child is not already added
       static RenderTargetBitmap BitmapRenderingWorkaround(Control control) {
         Rect originalBounds = control.Bounds;
-        control.Arrange(new Rect(0, 0, originalBounds.Width, originalBounds.Height));
-        var pixelSize = new PixelSize(( int ) control.Bounds.Width, ( int ) control.Bounds.Height);
+        Thickness originalMargin = control.Margin;
+        control.Margin = new Thickness(0);
+        control.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        control.Arrange(new Rect(control.Margin.Left, control.Margin.Top, originalBounds.Width, originalBounds.Height));
+        var pixelSize = new PixelSize(( int ) ( control.Bounds.Width ), ( int ) ( control.Bounds.Height ));
         var bmp = new RenderTargetBitmap(pixelSize);
         bmp.Render(control);
         control.Arrange(originalBounds);
+        control.Margin = originalMargin;
         return bmp;
       }
       var bmp = BitmapRenderingWorkaround(child);
@@ -72,7 +76,7 @@ internal class GhostContainer: Canvas {
   internal void Render(Avalonia.Size rootSize, Avalonia.Point ptrPos) {
     Width = rootSize.Width;
     Height = rootSize.Height;
-    RenderTransform = new TranslateTransform(ptrPos.X - _lastAddedAt.X, ptrPos.Y - _lastAddedAt.Y); // Center the ghost container on the pointer position
+    RenderTransform = new TranslateTransform(ptrPos.X - _lastAddedAt.X, ptrPos.Y - _lastAddedAt.Y); // Center the ghost container on the position of the last child of the canvas
   }
 }
 

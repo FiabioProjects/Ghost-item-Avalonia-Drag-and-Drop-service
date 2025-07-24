@@ -20,7 +20,7 @@ public class DraggingServiceInstance: IDisposable {
   private readonly GhostContainer _ghostContainer = new GhostContainer();
   private Control? _droppingTo = null;
   private readonly List<(Control, int)> _dropAllowedControlsSorted = []; // This list is used to sort the controls by distance to the root for hit testing purposes
-
+  private readonly HashSet<Control> _multiDraggedControls = [];          // This is used to store the controls that are currently selected for multi-dragging 
   /// <summary>
   /// Initializes a new instance of the <see cref="DraggingServiceInstance"/> class.
   /// </summary>
@@ -91,11 +91,7 @@ public class DraggingServiceInstance: IDisposable {
   private void StartControlDragging(object? sender, PointerPressedEventArgs e) {
     if( sender is not Control control )
       return;
-    if( !control.IsVisible || !control.IsAttachedToVisualTree() )
-      throw new InvalidOperationException(nameof(control) + " Control must be visible and attached to the visual tree to be dragged.");
-    if( control.Bounds.Width <= 0 || control.Bounds.Height <= 0 ) {
-      throw new InvalidOperationException("Control must have a non-zero size to be dragged.");
-    }
+
     static StyledElement FindSubRootControl(Control control, Panel root) {
       if( control == root )
         return root;
@@ -108,13 +104,34 @@ public class DraggingServiceInstance: IDisposable {
       return ptr!;
     }
 
-    var subRoot = FindSubRootControl(control, _root);
-    if( subRoot is not Control c )
-      throw new InvalidOperationException("Sub-root control must be a Control type.");
+    static void AddControlToGhostContainer(Control control, GhostContainer ghostContainer, Panel root) {
+      var subRoot = FindSubRootControl(control, root);         //important to get the bounds of the control relative to the root
+      if( subRoot is not Control c )
+        throw new InvalidOperationException("Sub-root control must be a Control type.");
 
-    _ghostContainer.AddChild(control, new Point(c.Bounds.X, c.Bounds.Y));   //this throws If the control is already added to the ghost container
+      ghostContainer.AddChild(control, new Point(c.Bounds.X, c.Bounds.Y));   //this throws If the control is already added to the ghost container
 
-    control.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
+    }
+
+    static void StartDragging(Control element, GhostContainer ghostContainer, Panel root, PointerPressedEventArgs e) {
+      if( !element.IsVisible || !element.IsAttachedToVisualTree() )
+        throw new InvalidOperationException(nameof(element) + " Control must be visible and attached to the visual tree to be dragged.");
+      if( element.Bounds.Width <= 0 || element.Bounds.Height <= 0 ) {
+        throw new InvalidOperationException(nameof(element) + "Control must have a non-zero size to be dragged.");
+      }
+      AddControlToGhostContainer(element, ghostContainer, root);
+      element.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, ghostContainer.DraggingControls));
+    }
+
+    if( control.GetValue(DraggingServiceAttached.IsSelectedForMultiDragProperty) ) {  //if the currently dragged element is selected for multi-dragging then add all the selected controls to the ghost container
+      foreach( Control toDrag in _multiDraggedControls ) {
+        if( toDrag != control ) {  //skip the current control, so it's dragged last
+          StartDragging(toDrag, _ghostContainer, _root, e);
+        }
+      }
+    }
+    StartDragging(control, _ghostContainer, _root, e);
+
     e.Handled = true;
   }
 
@@ -132,7 +149,20 @@ public class DraggingServiceInstance: IDisposable {
   /// </summary>
   internal void AllowDrag(Control control) {
     SetBackgroundAndHitTesting(control);
+    control.RemoveHandler(Control.PointerPressedEvent, StartControlDragging); // Remove any existing handler to avoid duplicates
     control.AddHandler(Control.PointerPressedEvent, StartControlDragging, RoutingStrategies.Bubble, false);
+  }
+
+  /// <summary>
+  /// Registers a control to be multi draggable.
+  /// </summary>
+  internal void SetControlMultiDragState(Control control, bool isSelected) {
+    if( isSelected ) {
+      if( !_multiDraggedControls.Add(control) )
+        throw new InvalidOperationException("Control is already selected for multi-drag.");
+    } else {
+      _multiDraggedControls.Remove(control);
+    }
   }
 
   /// <summary>

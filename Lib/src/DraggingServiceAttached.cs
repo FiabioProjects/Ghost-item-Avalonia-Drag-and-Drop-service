@@ -25,20 +25,28 @@ public class DraggingServiceAttached {
   /// <summary>
   /// Registers a callback invoked when a dragged control is dropped onto this control.
   /// </summary>
-  public static readonly AttachedProperty<DraggingServiceDropEvent> AllowDropProperty =                      //callback to be called when a control is dropped on the control
+  public static readonly AttachedProperty<DraggingServiceDropEvent> AllowDropProperty =
      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDropEvent>(
          "AllowDrop", defaultValue: (e) => { });
   /// <summary>
   /// Registers a callback invoked when this control starts a drag operation.
   /// </summary>
-  public static readonly AttachedProperty<DraggingServiceDragEvent> AllowDragProperty =                      //callback to be called when a control is dragged in the instance
+  public static readonly AttachedProperty<DraggingServiceDragEvent> AllowDragProperty =
      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDragEvent>(
          "AllowDrag", defaultValue: (e) => { });
+
+  /// <summary>
+  /// Info about the current selection state of the control in a multi-drag operation.
+  /// </summary>
+  public static readonly AttachedProperty<bool> IsSelectedForMultiDragProperty =
+    AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
+        "IsSelectedForMultiDrag", defaultValue: false);
 
   static DraggingServiceAttached() {
     IsRootOfDraggingInstanceProperty.Changed.AddClassHandler<Panel>(OnIsRootOfDraggingInstanceChanged);
     AllowDropProperty.Changed.AddClassHandler<Control>(OnAllowDropChanged);
     AllowDragProperty.Changed.AddClassHandler<Control>(OnAllowDragChanged);
+    IsSelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnIsSelectedForMultiDragChanged);
   }
 
   private static void OnIsRootOfDraggingInstanceChanged(Panel element, AvaloniaPropertyChangedEventArgs e) { //this is called when the root of the dragging service is set in the xaml
@@ -56,7 +64,6 @@ public class DraggingServiceAttached {
     if( e.NewValue is not DraggingServiceDropEvent dse ) {
       return;
     }
-
     DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
     instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
     if( instanceRecord == null )
@@ -80,6 +87,16 @@ public class DraggingServiceAttached {
     }
   }
 
+  private static void OnIsSelectedForMultiDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not bool newState ) {
+      return;
+    }
+    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
+    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    if( instanceRecord == null )
+      throw new InvalidOperationException("Can't set IsSelectedForMultiDrag on: " + nameof(control) + " instance root not found");
+    instanceRecord.Instance.SetControlMultiDragState(control, newState);
+  }
 
   private static DraggingServiceInstanceWrapper? FindRootInstance(StyledElement element) {
     DraggingServiceInstanceWrapper? instance = null;
@@ -108,11 +125,18 @@ public class DraggingServiceAttached {
   /// </summary>
   public static void SetAllowDrag(Control c, DraggingServiceDragEvent e) { c.SetValue(AllowDragProperty, e); }
 
+  /// <summary>
+  /// Sets the selection state for a control in a multi-drag operation.
+  /// </summary>
+  public static void SetIsSelectedForMultiDrag(Control c, bool isSelected) { c.SetValue(IsSelectedForMultiDragProperty, isSelected); }
+
+
   internal static void CleanProperties(Control control) {
 
     control.ClearValue(IsRootOfDraggingInstanceProperty);
     control.ClearValue(AllowDropProperty);
     control.ClearValue(AllowDragProperty);
+    control.ClearValue(IsSelectedForMultiDragProperty);
     control.ClearValue(DraggingServiceInstanceProperty);   //important, this has to be the last property to clear, otherwise the instance will not be disposed properly
   }
 }

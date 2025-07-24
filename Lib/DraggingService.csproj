@@ -8,15 +8,24 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Simple-Avalonia-DragnDrop-Service</PackageId>
 		<Version>1.0.3</Version>
-		<RepositoryType>git</RepositoryType> 
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</RepositoryUrl>
 		<Authors>FiabioProjects</Authors>
 		<Description>Minimal Drag and Drop Service UI library</Description>
 		<PackageOutputPath>..\LocalPackages</PackageOutputPath>
 	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageTags>drag drop avalonia ui library</PackageTags>
+		<PackageTags>drag drop Service</PackageTags>
+		<PackageTags>drag drop ghost item</PackageTags>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<WarningLevel>9999</WarningLevel>
-	</PropertyGroup> 
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<WarningLevel>9999</WarningLevel>
 	</PropertyGroup>

@@ -43,6 +43,14 @@ public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, IRead
   /// </summary>
   public readonly IReadOnlyCollection<Control> DraggedControls = draggedControls;
 }
+/// <summary>
+/// Contains event data for a selection action, including the control being selected or unselected and its new selection state.
+/// You can use 
+/// </summary>
+/// <param name="element">The Control which selection state  has changed.</param>
+public record DraggingServiceSelectionEventArgs(Control element) {
+  public readonly Control Element = element;
+}
 
 /// <summary>
 /// Wraps a DraggingServiceInstance with its depth from the root control.
