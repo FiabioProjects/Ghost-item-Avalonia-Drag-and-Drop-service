@@ -13,6 +13,7 @@ Supports multiple independent or nested instances, complex drop precedence, and 
 - ✅ **Nested instance support** with inner precedence resolution
 - ✅ **Overlap-aware drop target and dragged control resolution**, prioritizing deeper controls
 - ✅ **Custom drag/drop callbacks** via attached properties (`AllowDrag`, `AllowDrop`)
+- ✅ **Multi-selection support** for drag operations
 - ✅ **Pointer-aware drag context**: includes full `PointerEventArgs` and dragged control set
 - ✅ **Dynamic service management** via `IDisposable` pattern
 - ✅ **XAML/Binding-ready**: Easy to integrate via attached properties
@@ -66,14 +67,42 @@ or
     DraggingServiceAttached.SetIsRootOfDraggingInstance(control, false);
 ```
 
+### 🧲 Multi-Control Dragging
 
-#### Notes:
-- The service sets a transparent `Background` if not present and enables the `IsHitTestVisible` property for every control used in the service.
-- Calling Dispose() on the actual instance will not work. Always set the `IsRootOfDraggingInstance` Attached Property to dispose the instance.
-- Each attached property can be set via XAML or code-behind, allowing for flexible integration.
+The service supports dragging multiple controls at once using the `IsSelectedForMultiDrag` attached property. It is recommended to set this property in the code-behind to dynamically change the selections
+
+#### 🔧 How it Works
+
+- Any control with `IsSelectedForMultiDrag` set to `true` becomes part of the **multi-drag group**.
+- When the user starts dragging a control in this group:
+  - All other selected controls will be dragged together.
+  - Only **one** `DraggingServiceDragEvent` will be triggered for the entire group.
+  - The `DraggingServiceDragEventsArgs` will contain **all** dragged controls in `DraggedControls`.
+- **Important**: the group will not be cleared after an operation (you can manually clear it in the drag callback)
+- If the user drags a control that has `IsSelectedForMultiDrag` set to `false`:
+  - Only that control will be dragged, **even if** other controls are selected.
+- You can also register `DraggingServiceSelectionEvent` callbacks to respond to selection changes.
+
+
+
+### 📝 Notes
+
+- ⚠️ The service will automatically:
+  - Set a **transparent `Background`** on controls if one is not already set.
+  - Enable the `IsHitTestVisible` property on all controls participating in drag-and-drop.
+
+- ❌ **Do not call `Dispose()` directly** on the service instance.  
+  ✅ Instead, set `IsRootOfDraggingInstance` to `false` on the root container to dispose of the instance properly.
+
+- 🧩 All attached properties — such as:
+  - `AllowDrag`
+  - `AllowDrop`
+  - `SelectedForMultiDrag`
+  - `IsSelectedForMultiDrag`
+  - `IsRootOfDraggingInstance`  
+  — can be used both in **XAML** and **code-behind**, allowing for flexible integration in different design patterns (MVVM, code-first, etc).
 
 #### Roadmap and improvements 🚧:
-- Add support for multiple dragged controls at the same time
 - Add options to tunneling or bubbling events for overlapped dragged controls or drop targets
 - Add support for dynamic visual tree changes 
 - Add support for async callbacks

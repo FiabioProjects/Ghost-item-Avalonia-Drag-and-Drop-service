@@ -120,7 +120,7 @@ public class DraggingServiceInstance: IDisposable {
         throw new InvalidOperationException(nameof(element) + "Control must have a non-zero size to be dragged.");
       }
       AddControlToGhostContainer(element, ghostContainer, root);
-      element.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, ghostContainer.DraggingControls));
+
     }
 
     if( control.GetValue(DraggingServiceAttached.IsSelectedForMultiDragProperty) ) {  //if the currently dragged element is selected for multi-dragging then add all the selected controls to the ghost container
@@ -131,7 +131,7 @@ public class DraggingServiceInstance: IDisposable {
       }
     }
     StartDragging(control, _ghostContainer, _root, e);
-
+    control.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
     e.Handled = true;
   }
 
@@ -163,6 +163,7 @@ public class DraggingServiceInstance: IDisposable {
     } else {
       _multiDraggedControls.Remove(control);
     }
+    control.GetValue(DraggingServiceAttached.SelectedForMultiDragProperty).Invoke(new DraggingServiceSelectionEventArgs(control));
   }
 
   /// <summary>

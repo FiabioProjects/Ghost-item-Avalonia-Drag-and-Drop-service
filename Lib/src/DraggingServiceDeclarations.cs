@@ -44,8 +44,8 @@ public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, IRead
   public readonly IReadOnlyCollection<Control> DraggedControls = draggedControls;
 }
 /// <summary>
-/// Contains event data for a selection action, including the control being selected or unselected and its new selection state.
-/// You can use 
+/// Contains event data for a selection action, i.e. the control being selected or unselected.
+/// You can use <c>DraggingServiceAttached.IsSelectedForMultiDragProperty</c> to check the actual selection state of the control.
 /// </summary>
 /// <param name="element">The Control which selection state  has changed.</param>
 public record DraggingServiceSelectionEventArgs(Control element) {
@@ -91,3 +91,9 @@ public delegate void DraggingServiceDropEvent(DraggingServiceDropEventsArgs args
 /// </summary>
 /// <param name="args">The drag event arguments.</param>
 public delegate void DraggingServiceDragEvent(DraggingServiceDragEventsArgs args);
+
+/// <summary>
+/// Delegate representing the callback method for a multi drag selection event.
+/// </summary>
+/// <param name="args">The drag event arguments.</param>
+public delegate void DraggingServiceSelectionEvent(DraggingServiceSelectionEventArgs args);

@@ -38,11 +38,11 @@ internal class GhostContainer: Canvas {
         control.Margin = new Thickness(0);
         control.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         control.Arrange(new Rect(control.Margin.Left, control.Margin.Top, originalBounds.Width, originalBounds.Height));
-        var pixelSize = new PixelSize(( int ) ( control.Bounds.Width ), ( int ) ( control.Bounds.Height ));
+        var pixelSize = new PixelSize(( int ) ( control.Bounds.Width + 1 ), ( int ) ( control.Bounds.Height + 1 ));  //+1 to avoid rounding issues
         var bmp = new RenderTargetBitmap(pixelSize);
         bmp.Render(control);
         control.Arrange(originalBounds);
-        control.Margin = originalMargin;
+        control.Margin = originalMargin;   //for some reason the margin has to be set after the arrange call
         return bmp;
       }
       var bmp = BitmapRenderingWorkaround(child);

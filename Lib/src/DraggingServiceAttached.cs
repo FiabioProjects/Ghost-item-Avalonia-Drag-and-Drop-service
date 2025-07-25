@@ -42,11 +42,18 @@ public class DraggingServiceAttached {
     AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
         "IsSelectedForMultiDrag", defaultValue: false);
 
+  /// <summary>
+  ///  Registers a callback invoked when this control selection state for multi-drag operation changes. (you can use a conditional expression in the callback to check if the control is selected or not)
+  /// </summary>
+  public static readonly AttachedProperty<DraggingServiceSelectionEvent> SelectedForMultiDragProperty =
+    AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceSelectionEvent>(
+        "SelectedForMultiDrag", defaultValue: (args) => { });
   static DraggingServiceAttached() {
     IsRootOfDraggingInstanceProperty.Changed.AddClassHandler<Panel>(OnIsRootOfDraggingInstanceChanged);
     AllowDropProperty.Changed.AddClassHandler<Control>(OnAllowDropChanged);
     AllowDragProperty.Changed.AddClassHandler<Control>(OnAllowDragChanged);
     IsSelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnIsSelectedForMultiDragChanged);
+    SelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnSelectedForMultiDragChanged);
   }
 
   private static void OnIsRootOfDraggingInstanceChanged(Panel element, AvaloniaPropertyChangedEventArgs e) { //this is called when the root of the dragging service is set in the xaml
@@ -86,7 +93,6 @@ public class DraggingServiceAttached {
       instanceRecord.Instance.AllowDrag(control);
     }
   }
-
   private static void OnIsSelectedForMultiDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
     if( e.NewValue is not bool newState ) {
       return;
@@ -95,7 +101,23 @@ public class DraggingServiceAttached {
     instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
     if( instanceRecord == null )
       throw new InvalidOperationException("Can't set IsSelectedForMultiDrag on: " + nameof(control) + " instance root not found");
-    instanceRecord.Instance.SetControlMultiDragState(control, newState);
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
+      instanceRecord.Instance.SetControlMultiDragState(control, newState);
+    }
+  }
+
+  private static void OnSelectedForMultiDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceSelectionEvent dse ) {
+      return;
+    }
+    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
+    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    if( instanceRecord == null )
+      throw new InvalidOperationException("Can't set SelectedForMultiDrag on: " + nameof(control) + " instance root not found");
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+    }
   }
 
   private static DraggingServiceInstanceWrapper? FindRootInstance(StyledElement element) {
@@ -130,7 +152,15 @@ public class DraggingServiceAttached {
   /// </summary>
   public static void SetIsSelectedForMultiDrag(Control c, bool isSelected) { c.SetValue(IsSelectedForMultiDragProperty, isSelected); }
 
+  /// <summary>
+  /// Gets the selection state for a control in a multi-drag operation.
+  /// </summary>
+  public static bool GetIsSelectedForMultiDrag(Control c) { return c.GetValue(IsSelectedForMultiDragProperty); }
 
+  /// <summary>
+  /// Sets the selection callback for a control.
+  /// </summary>
+  public static void SetSelectedForMultiDrag(Control c, DraggingServiceSelectionEvent e) { c.SetValue(SelectedForMultiDragProperty, e); }
   internal static void CleanProperties(Control control) {
 
     control.ClearValue(IsRootOfDraggingInstanceProperty);
