@@ -3,18 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DraggingService", "Lib\DraggingService.csproj", "{B264C64B-65E7-6CBA-79BA-7C217FD8F027}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple-Avalonia-DragnDrop-Service", "Lib\Simple-Avalonia-DragnDrop-Service.csproj", "{B264C64B-65E7-6CBA-79BA-7C217FD8F027}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{D1CCB24F-A868-F185-9228-8CC249247C79}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Browser", "Demo.Browser\Demo.Browser.csproj", "{B11B05AD-86B5-AE7D-A456-183052BD5011}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Desktop", "Demo.Desktop\Demo.Desktop.csproj", "{38212629-1B08-1275-C004-F5307AF0E261}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
-	ProjectSection(SolutionItems) = preProject
-		nuget.config = nuget.config
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

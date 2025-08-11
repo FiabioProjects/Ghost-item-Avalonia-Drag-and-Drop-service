@@ -23,10 +23,11 @@ Supports multiple independent or nested instances, complex drop precedence, and 
 
 ## 🛠️ How to Use
 
-### 1. Mark a container (that inherits from Panel control) as the root of a drag instance
+### 1. Declare the namespace to include the library and mark a container (that inherits from Panel control) as the root of a drag instance
 
 ```xml
-<StackPanel local:DraggingServiceAttached.IsRootOfDraggingInstance="True">
+xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Service"
+<StackPanel ds:DraggingServiceAttached.IsRootOfDraggingInstance="True">
 ```
 
 ### 2. Enable Dragging/Dropping on your controls:
