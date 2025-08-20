@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<AssemblyName>Simple-Avalonia-DragnDrop-Service</AssemblyName>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<TargetFramework>net8.0</TargetFramework>
@@ -7,7 +8,7 @@
 		<LangVersion>latest</LangVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Simple-Avalonia-DragnDrop-Service</PackageId>
-		<Version>2.0.2</Version>
+		<Version>2.0.4</Version>
 		<RepositoryType>git</RepositoryType>
 		<PackageProjectUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</RepositoryUrl>
@@ -17,9 +18,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<PackageTags>drag drop avalonia ui library</PackageTags>
-		<PackageTags>drag drop Service</PackageTags>
-		<PackageTags>drag drop ghost item</PackageTags>
+		<PackageTags>drag;drop;avalonia;ui;library;service;ghost-item</PackageTags>
 		<AssemblyName>Simple-Avalonia-DragnDrop-Service</AssemblyName>
 	</PropertyGroup>
 
@@ -34,9 +33,9 @@
 	<ItemGroup>
 		<None Include="..\License.txt" Pack="true" PackagePath="" />
 		<None Include="..\README.md" Pack="true" PackagePath="" />
-		<PackageReference Include="Avalonia" Version="11.3.2" PrivateAssets="all" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" PrivateAssets="all" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" PrivateAssets="all" />
-		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" PrivateAssets="all" />
+		<PackageReference Include="Avalonia"  Version="[11.0.0,12.0.0)" PrivateAssets="all" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="[11.0.0,12.0.0)" PrivateAssets="all" />
+		<PackageReference Include="Avalonia.Fonts.Inter"  Version="[11.0.0,12.0.0)" PrivateAssets="all" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics"  Version="[11.0.0,12.0.0)" PrivateAssets="all" />
 	</ItemGroup>
 </Project>
