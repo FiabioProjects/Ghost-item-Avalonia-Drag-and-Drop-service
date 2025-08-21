@@ -21,6 +21,7 @@ public class DraggingServiceInstance: IDisposable {
   private Control? _droppingTo = null;
   private readonly List<(Control, int)> _dropAllowedControlsSorted = []; // This list is used to sort the controls by distance to the root for hit testing purposes
   private readonly HashSet<Control> _multiDraggedControls = [];          // This is used to store the controls that are currently selected for multi-dragging 
+  private PointerPressedEventArgs? _handledDragEvent = null; //this stores the event for the drag events to ensure that the drag operation is started only once per pointer press  
   /// <summary>
   /// Initializes a new instance of the <see cref="DraggingServiceInstance"/> class.
   /// </summary>
@@ -81,15 +82,15 @@ public class DraggingServiceInstance: IDisposable {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
       callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo));
     }
+    _handledDragEvent = null;
     _ghostContainer.IsVisible = false;
     _root.Cursor = _defaultCursor;
     _ghostContainer.ClearDraggingControls();
     _droppingTo = null;
     e.Pointer.Capture(null);
   }
-
   private void StartControlDragging(object? sender, PointerPressedEventArgs e) {
-    if( sender is not Control control || !DraggingServiceAttached.GetIsDragEnable(control) )  //if the sender has the dragging disabled or is not a Control type, we do nothing
+    if( sender is not Control control || !DraggingServiceAttached.GetIsDragEnable(control) || _handledDragEvent != null )  //if the sender has the dragging disabled, is not a Control type or the same event has already been handled in a related control, skip
       return;
 
     static StyledElement FindSubRootControl(Control control, Panel root) {
@@ -123,7 +124,7 @@ public class DraggingServiceInstance: IDisposable {
 
     }
 
-    if( control.GetValue(DraggingServiceAttached.IsSelectedForMultiDragProperty) ) {  //if the currently dragged element is selected for multi-dragging then add all the selected controls to the ghost container
+    if( DraggingServiceAttached.GetIsSelectedForMultiDrag(control) ) {  //if the currently dragged element is selected for multi-dragging then add all the selected controls to the ghost container
       foreach( Control toDrag in _multiDraggedControls ) {
         if( toDrag != control ) {  //skip the current control, so it's dragged last
           StartDragging(toDrag, _ghostContainer, _root, e);
@@ -132,7 +133,7 @@ public class DraggingServiceInstance: IDisposable {
     }
     StartDragging(control, _ghostContainer, _root, e);
     control.GetValue(DraggingServiceAttached.DragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
-    e.Handled = true;
+    _handledDragEvent = e; // Store the event to prevent multiple drag starts from the same pointer presse
   }
 
   private static void SetBackgroundAndHitTesting(Control control) {
@@ -150,7 +151,7 @@ public class DraggingServiceInstance: IDisposable {
   internal void AllowDrag(Control control) {
     SetBackgroundAndHitTesting(control);
     control.RemoveHandler(Control.PointerPressedEvent, StartControlDragging); // Remove any existing handler to avoid duplicates
-    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, RoutingStrategies.Bubble, false);
+    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, RoutingStrategies.Tunnel, false);
   }
 
   /// <summary>
