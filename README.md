@@ -12,7 +12,7 @@ Supports multiple independent or nested instances, complex drop precedence, and 
 - ✅ **Multiple independent instances** within the same visual tree
 - ✅ **Nested instance support** with inner precedence resolution
 - ✅ **Overlap-aware drop target and dragged control resolution**, prioritizing deeper controls
-- ✅ **Custom drag/drop callbacks** via attached properties (`AllowDrag`, `AllowDrop`)
+- ✅ **Custom drag/drop callbacks** via attached properties (`DragCallback`, `DropCallback`)
 - ✅ **Multi-selection support** for drag operations
 - ✅ **Pointer-aware drag context**: includes full `PointerEventArgs` and dragged control set
 - ✅ **Dynamic service management** via `IDisposable` pattern
@@ -30,40 +30,41 @@ xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Servi
 <StackPanel ds:DraggingServiceAttached.IsRootOfDraggingInstance="True">
 ```
 
-### 2. Enable Dragging/Dropping on your controls:
+### 2. Enable Dragging/Dropping on your controls and eventually attach some events handlers:
 ```xml
 <Button Content="Drag me!"
-        local:DraggingServiceAttached.AllowDrag="{Binding OnDragCallback}" />
+	local:DraggingServiceAttached.IsDragEnable="true"
+        local:DraggingServiceAttached.DragCallback="{Binding OnDragCallback}" />
 ```
 ```xml
 <TextBlock Content="Drop on me!"
-        local:DraggingServiceAttached.AllowDrag="{Binding OnDropCallback}" />
+	local:DraggingServiceAttached.IsDropEnable="true"
+        local:DraggingServiceAttached.DropCallback="{Binding OnDropCallback}" />
 ```
 
 
 ### 3. Implement the callbacks in your ViewModel (better for an MVVM approach) or code-behind:
 ```csharp 
-void OnDragCallback(DraggingServiceCallbackArgs args) {
-    // Access dragged controls and pointer info
+public DraggingServiceDragEvent OnDragCallback { get; } =
+     (DraggingServiceDragEventsArgs args) => {
+       // Access dragged controls and pointer info
     var controls = args.DraggedControls;
     var pointer = args.PointerEvent;
     // Logic here
-}
-
-void OnDropCallback(DraggingServiceCallbackArgs args) {
-    // Access dragged controls and pointer info
+};
+public DraggingServiceDropEvent OnDropCallback { get; } =
+     (DraggingServiceDropEventsArgs args) => {
+       // Access dragged controls and pointer info
     var controls = args.DraggedControls;
     var pointer = args.PointerEvent;
+    var container = args.DropTarget;
     // Logic here
-}
+};
 ```
-Data can be read via the data-context of the dragged controls/drop targets for a better MVVM approach
+Data can be read via the datacontext of the dragged controls/drop targets for a better MVVM approach
 
 ### 4. Dispose the service when no longer needed by setting `IsRootOfDraggingInstance` property to `false` on the root control:
-```csharp
-    control.SetValue(IsRootOfDraggingInstance, false)
-```
-or
+
 ```csharp
     DraggingServiceAttached.SetIsRootOfDraggingInstance(control, false);
 ```
@@ -80,6 +81,7 @@ The service supports dragging multiple controls at once using the `IsSelectedFor
   - Only **one** `DraggingServiceDragEvent` will be triggered for the entire group.
   - The `DraggingServiceDragEventsArgs` will contain **all** dragged controls in `DraggedControls`.
 - **Important**: the group will not be cleared after an operation (you can manually clear it in the drag callback)
+- All the controls in the group will be dragged, even if `IsDragEnableProperty` is set to false (the latter handles only the drag operation that starts everything)
 - If the user drags a control that has `IsSelectedForMultiDrag` set to `false`:
   - Only that control will be dragged, **even if** other controls are selected.
 - You can also register `DraggingServiceSelectionEvent` callbacks to respond to selection changes.
@@ -101,7 +103,7 @@ The service supports dragging multiple controls at once using the `IsSelectedFor
   - `SelectedForMultiDrag`
   - `IsSelectedForMultiDrag`
   - `IsRootOfDraggingInstance`  
-  — can be used both in **XAML** and **code-behind**, allowing for flexible integration in different design patterns (MVVM, code-first, etc).
+  — can be used both in **XAML** and **code-behind**, allowing for flexible integration in different design patterns (MVVM, code-first, etc). (See `DraggingServiceAttached` static class)
 
 #### Roadmap and improvements 🚧:
 - Add options to tunneling or bubbling events for overlapped dragged controls or drop targets

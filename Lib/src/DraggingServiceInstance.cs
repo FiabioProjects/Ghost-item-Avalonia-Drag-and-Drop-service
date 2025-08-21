@@ -69,7 +69,7 @@ public class DraggingServiceInstance: IDisposable {
     _droppingTo = null;
 
     foreach( (Control dropTarget, int _) in _dropAllowedControlsSorted ) {
-      if( IsDescendantOf(controlUnderPointer, dropTarget) ) {
+      if( DraggingServiceAttached.GetIsDropEnable(dropTarget) && IsDescendantOf(controlUnderPointer, dropTarget) ) { // Check if the control under the pointer is a descendant of the drop target && it has the dropping enable
         _root.Cursor = new Cursor(StandardCursorType.DragCopy);
         _droppingTo = dropTarget;
         return;
@@ -78,7 +78,7 @@ public class DraggingServiceInstance: IDisposable {
   }
   private void EndDrag(object? sender, PointerEventArgs e) {
     if( _droppingTo != null && _root.InputHitTest(e.GetPosition(_root)) != null ) {
-      DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.AllowDropProperty);
+      DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
       callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo));
     }
     _ghostContainer.IsVisible = false;
@@ -89,7 +89,7 @@ public class DraggingServiceInstance: IDisposable {
   }
 
   private void StartControlDragging(object? sender, PointerPressedEventArgs e) {
-    if( sender is not Control control )
+    if( sender is not Control control || !DraggingServiceAttached.GetIsDragEnable(control) )  //if the sender has the dragging disabled or is not a Control type, we do nothing
       return;
 
     static StyledElement FindSubRootControl(Control control, Panel root) {
@@ -131,7 +131,7 @@ public class DraggingServiceInstance: IDisposable {
       }
     }
     StartDragging(control, _ghostContainer, _root, e);
-    control.GetValue(DraggingServiceAttached.AllowDragProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
+    control.GetValue(DraggingServiceAttached.DragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
     e.Handled = true;
   }
 
@@ -163,13 +163,14 @@ public class DraggingServiceInstance: IDisposable {
     } else {
       _multiDraggedControls.Remove(control);
     }
-    control.GetValue(DraggingServiceAttached.SelectedForMultiDragProperty).Invoke(new DraggingServiceSelectionEventArgs(control));
+    control.GetValue(DraggingServiceAttached.SelectedForMultiDragCallbackProperty).Invoke(new DraggingServiceSelectionEventArgs(control));
   }
 
   /// <summary>
   /// Registers a control to be a valid drop target.
   /// </summary>
   internal void AllowDrop(Control control, int rootDepth) {
+
     static void InsertControlBySortedDistance(List<(Control control, int distance)> list, (Control control, int distance) item) {
       int index = list.FindIndex(x => x.distance < item.distance);
       if( index == -1 ) {

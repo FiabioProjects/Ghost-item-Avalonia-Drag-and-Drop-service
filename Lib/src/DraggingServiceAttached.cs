@@ -1,104 +1,92 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using System;
+
 namespace DraggingService;
 
 /// <summary>
 /// Provides attached properties to configure drag-and-drop behavior in Avalonia controls.
 /// </summary>
 public class DraggingServiceAttached {
-  /// <summary>
-  /// Holds a reference to the <see cref="DraggingServiceInstanceWrapper"/> associated with a control.
-  /// </summary>
-  public static readonly AttachedProperty<DraggingServiceInstanceWrapper?> DraggingServiceInstanceProperty =             //reference to the instance used in the control (could be any child of the instance root)
+  public static readonly AttachedProperty<DraggingServiceInstanceWrapper?> DraggingServiceInstanceProperty =
       AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceInstanceWrapper?>(
           "DraggingServiceInstance", defaultValue: null);
 
-  /// <summary>
-  /// Marks a Panel as the root of a <see cref="DraggingServiceInstance"/>.
-  /// </summary>
-  public static readonly AttachedProperty<bool> IsRootOfDraggingInstanceProperty =                      //check if the panel is the instance root
-     AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Panel, bool>(
-         "IsRootOfDraggingInstance",
-         defaultValue: false);
+  public static readonly AttachedProperty<bool> IsRootOfDraggingInstanceProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Panel, bool>(
+          "IsRootOfDraggingInstance", defaultValue: false);
 
-  /// <summary>
-  /// Registers a callback invoked when a dragged control is dropped onto this control.
-  /// </summary>
-  public static readonly AttachedProperty<DraggingServiceDropEvent> AllowDropProperty =
-     AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDropEvent>(
-         "AllowDrop", defaultValue: (e) => { });
-  /// <summary>
-  /// Registers a callback invoked when this control starts a drag operation.
-  /// </summary>
-  public static readonly AttachedProperty<DraggingServiceDragEvent> AllowDragProperty =
-     AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDragEvent>(
-         "AllowDrag", defaultValue: (e) => { });
+  public static readonly AttachedProperty<DraggingServiceDropEvent> DropCallbackProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDropEvent>(
+          "DropCallback", defaultValue: (e) => { });
 
-  /// <summary>
-  /// Info about the current selection state of the control in a multi-drag operation.
-  /// </summary>
+  public static readonly AttachedProperty<DraggingServiceDragEvent> DragCallbackProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDragEvent>(
+          "DragCallback", defaultValue: (e) => { });
+
+  public static readonly AttachedProperty<bool> IsDropEnableProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
+          "IsDropEnable", defaultValue: false);
+
+  public static readonly AttachedProperty<bool> IsDragEnableProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
+          "IsDragEnable", defaultValue: false);
+
   public static readonly AttachedProperty<bool> IsSelectedForMultiDragProperty =
-    AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
-        "IsSelectedForMultiDrag", defaultValue: false);
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
+          "IsSelectedForMultiDrag", defaultValue: false);
 
-  /// <summary>
-  ///  Registers a callback invoked when this control selection state for multi-drag operation changes. (you can use a conditional expression in the callback to check if the control is selected or not)
-  /// </summary>
-  public static readonly AttachedProperty<DraggingServiceSelectionEvent> SelectedForMultiDragProperty =
-    AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceSelectionEvent>(
-        "SelectedForMultiDrag", defaultValue: (args) => { });
+  public static readonly AttachedProperty<DraggingServiceSelectionEvent> SelectedForMultiDragCallbackProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceSelectionEvent>(
+          "SelectedForMultiDragCallback", defaultValue: (args) => { });
+
   static DraggingServiceAttached() {
     IsRootOfDraggingInstanceProperty.Changed.AddClassHandler<Panel>(OnIsRootOfDraggingInstanceChanged);
-    AllowDropProperty.Changed.AddClassHandler<Control>(OnAllowDropChanged);
-    AllowDragProperty.Changed.AddClassHandler<Control>(OnAllowDragChanged);
+    DropCallbackProperty.Changed.AddClassHandler<Control>(OnDropCallbackChanged);
+    DragCallbackProperty.Changed.AddClassHandler<Control>(OnDragCallbackChanged);
     IsSelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnIsSelectedForMultiDragChanged);
-    SelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnSelectedForMultiDragChanged);
+    SelectedForMultiDragCallbackProperty.Changed.AddClassHandler<Control>(OnSelectedForMultiDragCallbackChanged);
   }
 
-  private static void OnIsRootOfDraggingInstanceChanged(Panel element, AvaloniaPropertyChangedEventArgs e) { //this is called when the root of the dragging service is set in the xaml
-    if( e.NewValue is not bool value ) {
+  private static void OnIsRootOfDraggingInstanceChanged(Panel element, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not bool value )
       return;
-    }
     if( value ) {
       element.SetValue(DraggingServiceInstanceProperty, new DraggingServiceInstanceWrapper(new DraggingServiceInstance(element), 0));
     } else {
-      element.GetValue(DraggingServiceInstanceProperty)?.Instance.Dispose();  //if the root is set to false then dispose the instance
-      element.SetValue(DraggingServiceInstanceProperty, null);  //and remove the instance from the control
+      element.GetValue(DraggingServiceInstanceProperty)?.Instance.Dispose();
+      element.SetValue(DraggingServiceInstanceProperty, null);
     }
   }
-  private static void OnAllowDropChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
-    if( e.NewValue is not DraggingServiceDropEvent dse ) {
+
+  private static void OnDropCallbackChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceDropEvent dse )
       return;
-    }
-    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
-    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
     if( instanceRecord == null )
-      throw new InvalidOperationException("Can't set AllowDropProperty on: " + nameof(control) + " instance root not found");
+      throw new InvalidOperationException("Can't set DropCallback on: " + nameof(control) + " instance root not found");
     if( !instanceRecord.Instance.IsDisposing ) {
-      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
       instanceRecord.Instance.AllowDrop(control, instanceRecord.DepthFromRoot);
     }
   }
-  private static void OnAllowDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
-    if( e.NewValue is not DraggingServiceDragEvent dse ) {
+
+  private static void OnDragCallbackChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceDragEvent dse )
       return;
-    }
-    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
-    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
     if( instanceRecord == null )
-      throw new InvalidOperationException("Can't set AllowDragProperty on: " + nameof(control) + " instance root not found");
+      throw new InvalidOperationException("Can't set DragCallback on: " + nameof(control) + " instance root not found");
     if( !instanceRecord.Instance.IsDisposing ) {
-      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
       instanceRecord.Instance.AllowDrag(control);
     }
   }
+
   private static void OnIsSelectedForMultiDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
-    if( e.NewValue is not bool newState ) {
+    if( e.NewValue is not bool newState )
       return;
-    }
-    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
-    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
     if( instanceRecord == null )
       throw new InvalidOperationException("Can't set IsSelectedForMultiDrag on: " + nameof(control) + " instance root not found");
     if( !instanceRecord.Instance.IsDisposing ) {
@@ -107,16 +95,14 @@ public class DraggingServiceAttached {
     }
   }
 
-  private static void OnSelectedForMultiDragChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
-    if( e.NewValue is not DraggingServiceSelectionEvent dse ) {
+  private static void OnSelectedForMultiDragCallbackChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceSelectionEvent dse )
       return;
-    }
-    DraggingServiceInstanceWrapper? instanceRecord = control.GetValue(DraggingServiceInstanceProperty);
-    instanceRecord ??= FindRootInstance(control);  //if instance is not set traverse the visual tree to find it
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
     if( instanceRecord == null )
-      throw new InvalidOperationException("Can't set SelectedForMultiDrag on: " + nameof(control) + " instance root not found");
+      throw new InvalidOperationException("Can't set SelectedForMultiDragCallback on: " + nameof(control) + " instance root not found");
     if( !instanceRecord.Instance.IsDisposing ) {
-      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);  //cache for later use
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
     }
   }
 
@@ -126,7 +112,7 @@ public class DraggingServiceAttached {
     int depth = 0;
     while( ptr != null && instance == null ) {
       if( ptr.GetValue(IsRootOfDraggingInstanceProperty) ) {
-        instance = new DraggingServiceInstanceWrapper(ptr.GetValue(DraggingServiceInstanceProperty)!.Instance, depth);  //if the ptr is the root then it has the instance set
+        instance = new DraggingServiceInstanceWrapper(ptr.GetValue(DraggingServiceInstanceProperty)!.Instance, depth);
       }
       ptr = ptr.Parent;
       depth++;
@@ -134,39 +120,57 @@ public class DraggingServiceAttached {
     return instance;
   }
 
-  /// <summary>
-  /// Sets the drop callback for a control.
-  /// </summary>
-  public static void SetAllowDrop(Control c, DraggingServiceDropEvent e) { c.SetValue(AllowDropProperty, e); }
-  /// <summary>
-  /// Sets whether a panel is the root of a drag instance.
-  /// </summary>
-  public static void SetIsRootOfDraggingInstance(Panel p, bool b) { p.SetValue(IsRootOfDraggingInstanceProperty, b); }
-  /// <summary>
-  /// Sets the drag callback for a control.
-  /// </summary>
-  public static void SetAllowDrag(Control c, DraggingServiceDragEvent e) { c.SetValue(AllowDragProperty, e); }
+  public static void SetDraggingServiceInstance(Control control, DraggingServiceInstanceWrapper? instance)
+    => control.SetValue(DraggingServiceInstanceProperty, instance);
+  public static DraggingServiceInstanceWrapper? GetDraggingServiceInstance(Control control)
+      => control.GetValue(DraggingServiceInstanceProperty);
 
-  /// <summary>
-  /// Sets the selection state for a control in a multi-drag operation.
-  /// </summary>
-  public static void SetIsSelectedForMultiDrag(Control c, bool isSelected) { c.SetValue(IsSelectedForMultiDragProperty, isSelected); }
+  // IsRootOfDraggingInstance
+  public static void SetIsRootOfDraggingInstance(Panel panel, bool value)
+      => panel.SetValue(IsRootOfDraggingInstanceProperty, value);
+  public static bool GetIsRootOfDraggingInstance(Panel panel)
+      => panel.GetValue(IsRootOfDraggingInstanceProperty);
 
-  /// <summary>
-  /// Gets the selection state for a control in a multi-drag operation.
-  /// </summary>
-  public static bool GetIsSelectedForMultiDrag(Control c) { return c.GetValue(IsSelectedForMultiDragProperty); }
+  // DropCallback
+  public static void SetDropCallback(Control control, DraggingServiceDropEvent callback)
+      => control.SetValue(DropCallbackProperty, callback);
+  public static DraggingServiceDropEvent GetDropCallback(Control control)
+      => control.GetValue(DropCallbackProperty);
 
-  /// <summary>
-  /// Sets the selection callback for a control.
-  /// </summary>
-  public static void SetSelectedForMultiDrag(Control c, DraggingServiceSelectionEvent e) { c.SetValue(SelectedForMultiDragProperty, e); }
+  // DragCallback
+  public static void SetDragCallback(Control control, DraggingServiceDragEvent callback)
+      => control.SetValue(DragCallbackProperty, callback);
+  public static DraggingServiceDragEvent GetDragCallback(Control control)
+      => control.GetValue(DragCallbackProperty);
+
+  // IsDropEnable
+  public static void SetIsDropEnable(Control control, bool value)
+      => control.SetValue(IsDropEnableProperty, value);
+  public static bool GetIsDropEnable(Control control)
+      => control.GetValue(IsDropEnableProperty);
+
+  // IsDragEnable
+  public static void SetIsDragEnable(Control control, bool value)
+      => control.SetValue(IsDragEnableProperty, value);
+  public static bool GetIsDragEnable(Control control)
+      => control.GetValue(IsDragEnableProperty);
+
+  // IsSelectedForMultiDrag
+  public static void SetIsSelectedForMultiDrag(Control control, bool value)
+      => control.SetValue(IsSelectedForMultiDragProperty, value);
+  public static bool GetIsSelectedForMultiDrag(Control control)
+      => control.GetValue(IsSelectedForMultiDragProperty);
+
+  // SelectedForMultiDragCallback
+  public static void SetSelectedForMultiDragCallback(Control control, DraggingServiceSelectionEvent callback)
+      => control.SetValue(SelectedForMultiDragCallbackProperty, callback);
+  public static DraggingServiceSelectionEvent GetSelectedForMultiDragCallback(Control control)
+      => control.GetValue(SelectedForMultiDragCallbackProperty);
   internal static void CleanProperties(Control control) {
-
     control.ClearValue(IsRootOfDraggingInstanceProperty);
-    control.ClearValue(AllowDropProperty);
-    control.ClearValue(AllowDragProperty);
+    control.ClearValue(DropCallbackProperty);
+    control.ClearValue(DragCallbackProperty);
     control.ClearValue(IsSelectedForMultiDragProperty);
-    control.ClearValue(DraggingServiceInstanceProperty);   //important, this has to be the last property to clear, otherwise the instance will not be disposed properly
+    control.ClearValue(DraggingServiceInstanceProperty);
   }
 }
