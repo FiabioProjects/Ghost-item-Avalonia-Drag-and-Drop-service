@@ -15,6 +15,7 @@ Supports multiple independent or nested instances, complex drop precedence, and 
 - ✅ **Custom drag/drop callbacks** via attached properties (`DragCallback`, `DropCallback`)
 - ✅ **Multi-selection support** for drag operations
 - ✅ **Pointer-aware drag context**: includes full `PointerEventArgs` and dragged control set
+- ✅ **Customizable Routing Strategy** for Drag/Drop events callbacks
 - ✅ **Dynamic service management** via `IDisposable` pattern
 - ✅ **XAML/Binding-ready**: Easy to integrate via attached properties
 - ✅ **Cross-platform**: Fully compatible with all Avalonia-supported platforms
@@ -96,8 +97,8 @@ The service supports dragging multiple controls at once using the `IsSelectedFor
 
 - ❌ **Do not call `Dispose()` directly** on the service instance.  
   ✅ Instead, set `IsRootOfDraggingInstance` to `false` on the root container to dispose of the instance properly.
-
-- 🧩 All attached properties — such as:
+- 🧩 **Customize the Routing Strategy for Drag event handlers** using the `DragEventRoutingStrategy` attached property (e.g.`ds:DraggingServiceAttached.DragEventRoutingStrategy="Tunnel"`)
+- 🧩 All attached properties, such as:
   - `AllowDrag`
   - `AllowDrop`
   - `SelectedForMultiDrag`

@@ -35,7 +35,7 @@ public class DraggingServiceInstance: IDisposable {
     _defaultCursor = _root.Cursor;
     //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Bubbling handlers are called at the end. 
     panel.AddHandler(Panel.PointerMovedEvent, Drag, RoutingStrategies.Bubble, true);
-    panel.AddHandler(Panel.PointerReleasedEvent, EndDrag, RoutingStrategies.Bubble, true);
+    panel.AddHandler(Panel.PointerReleasedEvent, EndDrag, RoutingStrategies.Bubble), true);
     panel.AddHandler(Panel.PointerEnteredEvent, OnPointerEntered, RoutingStrategies.Direct, true);
     _root.Children.Add(_ghostContainer);
   }
@@ -151,7 +151,7 @@ public class DraggingServiceInstance: IDisposable {
   internal void AllowDrag(Control control) {
     SetBackgroundAndHitTesting(control);
     control.RemoveHandler(Control.PointerPressedEvent, StartControlDragging); // Remove any existing handler to avoid duplicates
-    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, RoutingStrategies.Tunnel, false);
+    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, DraggingServiceAttached.GetDragEventRoutingStrategy(control), true);
   }
 
   /// <summary>
