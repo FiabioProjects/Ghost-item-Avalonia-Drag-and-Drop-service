@@ -93,24 +93,11 @@ public class DraggingServiceInstance: IDisposable {
     if( sender is not Control control || !DraggingServiceAttached.GetIsDragEnable(control) || _handledDragEvent != null )  //if the sender has the dragging disabled, is not a Control type or the same event has already been handled in a related control, skip
       return;
 
-    static StyledElement FindSubRootControl(Control control, Panel root) {
-      if( control == root )
-        return root;
-      StyledElement ptr = control!;
-      StyledElement? prev = ptr.Parent;
-      while( prev != root ) {
-        ptr = ptr!.Parent!;
-        prev = ptr?.Parent;
-      }
-      return ptr!;
-    }
-
     static void AddControlToGhostContainer(Control control, GhostContainer ghostContainer, Panel root) {
-      var subRoot = FindSubRootControl(control, root);         //important to get the bounds of the control relative to the root
-      if( subRoot is not Control c )
-        throw new InvalidOperationException("Sub-root control must be a Control type.");
-
-      ghostContainer.AddChild(control, new Point(c.Bounds.X, c.Bounds.Y));   //this throws If the control is already added to the ghost container
+      Point? boundsRelativeToRoot = control.TranslatePoint(new Point(0, 0), root);
+      if( boundsRelativeToRoot == null )
+        throw new InvalidOperationException("Control must be a descendant of the root panel to be dragged.");
+      ghostContainer.AddChild(control, boundsRelativeToRoot.Value);   //this throws If the control is already added to the ghost container
 
     }
 

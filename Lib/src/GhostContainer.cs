@@ -29,7 +29,7 @@ internal class GhostContainer: Canvas {
     Height = newSize.Height;
   }
 
-  internal void AddChild(Control child, Avalonia.Point point) {
+  internal void AddChild(Control child, Point point) {
     if( _draggingControls.Add(child) ) {
       //if the child is not already added
       static RenderTargetBitmap BitmapRenderingWorkaround(Control control) {
