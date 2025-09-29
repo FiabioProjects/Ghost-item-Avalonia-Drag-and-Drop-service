@@ -7,8 +7,9 @@ using System.Collections.Generic;
 
 namespace DraggingService;
 internal class GhostContainer: Canvas {
-  private readonly HashSet<Control> _draggingControls = [];
-  public IReadOnlyCollection<Control> DraggingControls => _draggingControls;
+
+  private readonly Dictionary<Control, Image> _draggingControlsMapping = [];
+  public IReadOnlyCollection<Control> DraggingControls => _draggingControlsMapping.Keys;
 
   private Point _lastAddedAt = new Point(0, 0); // This is used to store the last position where a control was added to the ghost container
 
@@ -29,36 +30,37 @@ internal class GhostContainer: Canvas {
     Height = newSize.Height;
   }
 
-  internal void AddChild(Control child, Point point) {
-    if( _draggingControls.Add(child) ) {
-      //if the child is not already added
-      static RenderTargetBitmap BitmapRenderingWorkaround(Control control) {
-        Rect originalBounds = control.Bounds;
-        Thickness originalMargin = control.Margin;
-        control.Margin = new Thickness(0);
-        control.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        control.Arrange(new Rect(control.Margin.Left, control.Margin.Top, originalBounds.Width, originalBounds.Height));
-        var pixelSize = new PixelSize(( int ) ( control.Bounds.Width + 1 ), ( int ) ( control.Bounds.Height + 1 ));  //+1 to avoid rounding issues
-        var bmp = new RenderTargetBitmap(pixelSize);
-        bmp.Render(control);
-        control.Arrange(originalBounds);
-        control.Margin = originalMargin;   //for some reason the margin has to be set after the arrange call
-        return bmp;
-      }
-      var bmp = BitmapRenderingWorkaround(child);
-      Image ghost = new Image {
-        Width = child.Bounds.Width,
-        Height = child.Bounds.Height,
-        Source = bmp,
-      };
-      Canvas.SetLeft(ghost, point.X);
-      Canvas.SetTop(ghost, point.Y);
-      _lastAddedAt = point;
-      Children.Add(ghost);
+  internal Point OffsetWithLast(Control c) {
+    return new Point(Canvas.GetLeft(_draggingControlsMapping[c]) - _lastAddedAt.X, Canvas.GetTop(_draggingControlsMapping[c]) - _lastAddedAt.Y);
+  }
 
-    } else {
+  internal void AddChild(Control child, Point point) {
+    static RenderTargetBitmap BitmapRenderingWorkaround(Control control) {
+      Rect originalBounds = control.Bounds;
+      Thickness originalMargin = control.Margin;
+      control.Margin = new Thickness(0);
+      control.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+      control.Arrange(new Rect(control.Margin.Left, control.Margin.Top, originalBounds.Width, originalBounds.Height));
+      var pixelSize = new PixelSize(( int ) ( control.Bounds.Width + 1 ), ( int ) ( control.Bounds.Height + 1 ));  //+1 to avoid rounding issues
+      var bmp = new RenderTargetBitmap(pixelSize);
+      bmp.Render(control);
+      control.Arrange(originalBounds);
+      control.Margin = originalMargin;   //for some reason the margin has to be set after the arrange call
+      return bmp;
+    }
+    var bmp = BitmapRenderingWorkaround(child);
+    Image ghost = new Image {
+      Width = child.Bounds.Width,
+      Height = child.Bounds.Height,
+      Source = bmp,
+    };
+    try { _draggingControlsMapping.Add(child, ghost); } catch( ArgumentException ) {
       throw new InvalidOperationException("Control already added to the ghost container.");
     }
+    Canvas.SetLeft(ghost, point.X);
+    Canvas.SetTop(ghost, point.Y);
+    _lastAddedAt = point;
+    Children.Add(ghost);
   }
   internal void ClearDraggingControls() {
     foreach( Control ghost in Children ) {
@@ -69,7 +71,7 @@ internal class GhostContainer: Canvas {
         bitmap.Dispose();
       }
     }
-    _draggingControls.Clear();
+    _draggingControlsMapping.Clear();
     Children.Clear();
   }
 

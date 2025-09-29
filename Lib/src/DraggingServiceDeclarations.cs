@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
+using System;
 using System.Collections.Generic;
 
 namespace DraggingService;
@@ -10,7 +11,8 @@ namespace DraggingService;
 /// <param name="pointerEvent">The pointer event that triggered the drop.</param>
 /// <param name="draggedControls">The collection of controls being dragged.</param>
 /// <param name="dropTarget">The control where the drop occurred.</param>
-public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IReadOnlyCollection<Control> draggedControls, Control dropTarget) {
+/// <param name="offsetLambda">A function that returns a Point representing the offset from its parameter relative to the last control added to the ghostcontainer</param>
+public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IReadOnlyCollection<Control> draggedControls, Control dropTarget, Func<Control, Avalonia.Point> offsetLambda) {
   /// <summary>
   /// The pointer event that triggered the drop.
   /// </summary>
@@ -25,6 +27,12 @@ public record DraggingServiceDropEventsArgs(PointerEventArgs pointerEvent, IRead
   /// The control that accepted the drop.
   /// </summary>
   public readonly Control DropTarget = dropTarget;
+
+  /// <summary>
+  /// The offset function that returns a Point representing the offset from its parameter relative to the last control added to the ghostcontainer.
+  /// The latter will always be equal to the position of the pointerEvent
+  /// </summary>
+  public readonly Func<Control, Avalonia.Point> OffSetLambda = offsetLambda;
 }
 
 /// <summary>
@@ -42,6 +50,8 @@ public record DraggingServiceDragEventsArgs(PointerEventArgs pointerEvent, IRead
   /// The controls that are currently being dragged.
   /// </summary>
   public readonly IReadOnlyCollection<Control> DraggedControls = draggedControls;
+
+
 }
 /// <summary>
 /// Contains event data for a selection action, i.e. the control being selected or unselected.

@@ -80,7 +80,7 @@ public class DraggingServiceInstance: IDisposable {
   private void EndDrag(object? sender, PointerEventArgs e) {
     if( _droppingTo != null && _root.InputHitTest(e.GetPosition(_root)) != null ) {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
-      callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo));
+      callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo, _ghostContainer.OffsetWithLast));
     }
     _handledDragEvent = null;
     _ghostContainer.IsVisible = false;

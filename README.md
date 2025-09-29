@@ -59,6 +59,7 @@ public DraggingServiceDropEvent OnDropCallback { get; } =
     var controls = args.DraggedControls;
     var pointer = args.PointerEvent;
     var container = args.DropTarget;
+    var offset = args.offsetLambda;
     // Logic here
 };
 ```
@@ -83,6 +84,7 @@ The service supports dragging multiple controls at once using the `IsSelectedFor
   - The `DraggingServiceDragEventsArgs` will contain **all** dragged controls in `DraggedControls`.
 - **Important**: the group will not be cleared after an operation (you can manually clear it in the drag callback)
 - All the controls in the group will be dragged, even if `IsDragEnableProperty` is set to false (the latter handles only the drag operation that starts everything)
+- You can access the position of each dragged control via the `offsetLambda` function in the `DraggingServiceDropEventsArgs` during the drop event.
 - If the user drags a control that has `IsSelectedForMultiDrag` set to `false`:
   - Only that control will be dragged, **even if** other controls are selected.
 - You can also register `DraggingServiceSelectionEvent` callbacks to respond to selection changes.
