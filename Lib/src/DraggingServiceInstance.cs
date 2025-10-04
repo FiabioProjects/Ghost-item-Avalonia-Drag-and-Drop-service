@@ -78,13 +78,14 @@ public class DraggingServiceInstance: IDisposable {
     }
   }
   private void EndDrag(object? sender, PointerEventArgs e) {
+    foreach( var c in _ghostContainer.DraggingControls ) {//foreach dragged control call the drag end callback
+      c.GetValue(DraggingServiceAttached.EndDragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
+    }
     if( _droppingTo != null && _root.InputHitTest(e.GetPosition(_root)) != null ) {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
       callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo, _ghostContainer.OffsetWithLast));
     }
-    foreach( var c in _ghostContainer.DraggingControls ) {//foreach dragged control call the drag end callback
-      c.GetValue(DraggingServiceAttached.DragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
-    }
+
     _handledDragEvent = null;
     _ghostContainer.IsVisible = false;
     _root.Cursor = _defaultCursor;

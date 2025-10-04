@@ -104,8 +104,8 @@ The service supports dragging multiple controls at once using the `IsSelectedFor
 - ⚠️ The service will automatically:
   - Set a **transparent `Background`** on controls if one is not already set.
   - Enable the `IsHitTestVisible` property on all controls participating in drag-and-drop.
-
 - ❌ **Do not call `Dispose()` directly** on the service instance.  
+- The `EndDragCallback` is called BEFORE the `DropCallback` when a valid drop occurs.
   ✅ Instead, set `IsRootOfDraggingInstance` to `false` on the root container to dispose of the instance properly.
 - 🧩 **Customize the Routing Strategy for Drag event handlers** using the `DragEventRoutingStrategy` attached property (e.g.`ds:DraggingServiceAttached.DragEventRoutingStrategy="Tunnel"`)
 - 🧩 All attached properties, such as:
