@@ -35,7 +35,8 @@ xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Servi
 ```xml
 <Button Content="Drag me!"
 	local:DraggingServiceAttached.IsDragEnable="true"
-        local:DraggingServiceAttached.DragCallback="{Binding OnDragCallback}" />
+        local:DraggingServiceAttached.DragCallback="{Binding OnDragCallback}"
+         local:DraggingServiceAttached.DragCallback="{Binding OnEndDragCallback}"/>
 ```
 ```xml
 <TextBlock Content="Drop on me!"
@@ -47,6 +48,13 @@ xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Servi
 ### 3. Implement the callbacks in your ViewModel (better for an MVVM approach) or code-behind:
 ```csharp 
 public DraggingServiceDragEvent OnDragCallback { get; } =
+     (DraggingServiceDragEventsArgs args) => {
+       // Access dragged controls and pointer info
+    var controls = args.DraggedControls;
+    var pointer = args.PointerEvent;
+    // Logic here
+};
+public DraggingServiceDragEvent OnEndDragCallback { get; } =
      (DraggingServiceDragEventsArgs args) => {
        // Access dragged controls and pointer info
     var controls = args.DraggedControls;

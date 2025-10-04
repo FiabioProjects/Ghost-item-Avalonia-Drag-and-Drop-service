@@ -8,7 +8,7 @@
 		<LangVersion>latest</LangVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Simple-Avalonia-DragnDrop-Service</PackageId>
-		<Version>2.3.0</Version>
+		<Version>2.4.0</Version>
 		<RepositoryType>git</RepositoryType>
 		<PackageProjectUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/FiabioProjects/Ghost-item-Avalonia-Drag-and-Drop-service</RepositoryUrl>

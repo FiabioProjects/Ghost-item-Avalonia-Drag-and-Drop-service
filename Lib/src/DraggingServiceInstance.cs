@@ -82,12 +82,16 @@ public class DraggingServiceInstance: IDisposable {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
       callback.Invoke(new DraggingServiceDropEventsArgs(e, _ghostContainer.DraggingControls, _droppingTo, _ghostContainer.OffsetWithLast));
     }
+    foreach( var c in _ghostContainer.DraggingControls ) {//foreach dragged control call the drag end callback
+      c.GetValue(DraggingServiceAttached.DragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
+    }
     _handledDragEvent = null;
     _ghostContainer.IsVisible = false;
     _root.Cursor = _defaultCursor;
     _ghostContainer.ClearDraggingControls();
     _droppingTo = null;
     e.Pointer.Capture(null);
+
   }
   private void StartControlDragging(object? sender, PointerPressedEventArgs e) {
     if( sender is not Control control || !DraggingServiceAttached.GetIsDragEnable(control) || _handledDragEvent != null )  //if the sender has the dragging disabled, is not a Control type or the same event has already been handled in a related control, skip

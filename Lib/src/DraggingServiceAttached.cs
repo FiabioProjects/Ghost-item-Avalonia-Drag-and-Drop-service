@@ -39,6 +39,14 @@ public class DraggingServiceAttached {
       AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDragEvent>(
           "DragCallback", defaultValue: (e) => { });
 
+
+  /// <summary>
+  /// Registers a callback invoked when a dragging operation ends for a control.
+  /// </summary>
+  public static readonly AttachedProperty<DraggingServiceDragEvent> EndDragCallbackProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, DraggingServiceDragEvent>(
+          "EndDragCallback", defaultValue: (e) => { });
+
   /// <summary>
   /// Determines whether this control can act as a drop target in a drag-and-drop operation.
   /// </summary>
@@ -80,8 +88,10 @@ public class DraggingServiceAttached {
     IsRootOfDraggingInstanceProperty.Changed.AddClassHandler<Panel>(OnIsRootOfDraggingInstanceChanged);
     DropCallbackProperty.Changed.AddClassHandler<Control>(OnDropCallbackChanged);
     DragCallbackProperty.Changed.AddClassHandler<Control>(OnDragCallbackChanged);
+    EndDragCallbackProperty.Changed.AddClassHandler<Control>(OnEndDragCallbackChanged);
     IsSelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnIsSelectedForMultiDragChanged);
     SelectedForMultiDragCallbackProperty.Changed.AddClassHandler<Control>(OnSelectedForMultiDragCallbackChanged);
+
   }
 
   /// <summary>
@@ -127,7 +137,20 @@ public class DraggingServiceAttached {
       instanceRecord.Instance.AllowDrag(control);
     }
   }
-
+  /// <summary>
+  /// Handles changes to <see cref="EndDragCallbackProperty"/> by registering the control as draggable within the drag instance.
+  /// </summary>
+  private static void OnEndDragCallbackChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceDragEvent dse )
+      return;
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
+    if( instanceRecord == null )
+      throw new InvalidOperationException("Can't set DragCallback on: " + nameof(control) + " instance root not found");
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
+      instanceRecord.Instance.AllowDrag(control);
+    }
+  }
   /// <summary>
   /// Handles changes to <see cref="IsSelectedForMultiDragProperty"/> by updating the control’s selection state in the drag instance.
   /// </summary>
@@ -217,10 +240,21 @@ public class DraggingServiceAttached {
       => control.SetValue(DragCallbackProperty, callback);
 
   /// <summary>
+  /// Sets the end drag callback for a control.
+  /// </summary>
+  public static void SetEndDragCallback(Control control, DraggingServiceDragEvent callback)
+      => control.SetValue(EndDragCallbackProperty, callback);
+  /// <summary>
   /// Gets the drag callback for a control.
   /// </summary>
   public static DraggingServiceDragEvent GetDragCallback(Control control)
       => control.GetValue(DragCallbackProperty);
+
+  /// <summary>
+  /// Gets the end drag callback for a control.
+  /// </summary>
+  public static DraggingServiceDragEvent GetEndDragCallback(Control control)
+      => control.GetValue(EndDragCallbackProperty);
 
   /// <summary>
   /// Sets whether a control is enabled as a drop target.
