@@ -82,7 +82,12 @@ public class DraggingServiceAttached {
       AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, RoutingStrategies>(
           "DragEventRoutingStrategy", defaultValue: RoutingStrategies.Bubble);
 
-
+  /// <summary>
+  /// Determines whether this control should be hidden when it is dragged.
+  /// </summary>
+  public static readonly AttachedProperty<bool> HideWhenDraggedProperty =
+      AvaloniaProperty.RegisterAttached<DraggingServiceAttached, Control, bool>(
+          "HideWhenDragged", defaultValue: false);
 
   static DraggingServiceAttached() {
     IsRootOfDraggingInstanceProperty.Changed.AddClassHandler<Panel>(OnIsRootOfDraggingInstanceChanged);
@@ -91,7 +96,7 @@ public class DraggingServiceAttached {
     EndDragCallbackProperty.Changed.AddClassHandler<Control>(OnEndDragCallbackChanged);
     IsSelectedForMultiDragProperty.Changed.AddClassHandler<Control>(OnIsSelectedForMultiDragChanged);
     SelectedForMultiDragCallbackProperty.Changed.AddClassHandler<Control>(OnSelectedForMultiDragCallbackChanged);
-
+    HideWhenDraggedProperty.Changed.AddClassHandler<Control>(OnHideWhenDraggedChanged);
   }
 
   /// <summary>
@@ -175,6 +180,20 @@ public class DraggingServiceAttached {
     var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
     if( instanceRecord == null )
       throw new InvalidOperationException("Can't set SelectedForMultiDragCallback on: " + nameof(control) + " instance root not found");
+    if( !instanceRecord.Instance.IsDisposing ) {
+      control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
+    }
+  }
+
+  /// <summary>
+  /// Handles changes to <see cref="HideWhenDraggedProperty"/> by ensuring the control is associated with the current drag instance.
+  /// </summary>
+  private static void OnHideWhenDraggedChanged(Control control, AvaloniaPropertyChangedEventArgs e) {
+    if( e.NewValue is not DraggingServiceSelectionEvent dse )
+      return;
+    var instanceRecord = control.GetValue(DraggingServiceInstanceProperty) ?? FindRootInstance(control);
+    if( instanceRecord == null )
+      throw new InvalidOperationException("Can't set HideWhenDragged on: " + nameof(control) + " instance root not found");
     if( !instanceRecord.Instance.IsDisposing ) {
       control.SetValue(DraggingServiceInstanceProperty, instanceRecord);
     }
@@ -317,9 +336,22 @@ public class DraggingServiceAttached {
       => control.GetValue(DragEventRoutingStrategyProperty);
 
   /// <summary>
+  /// Sets whether a control is hidden when dragged.
+  /// </summary>
+  public static void SetHideWhenDragged(Control control, bool value)
+      => control.SetValue(HideWhenDraggedProperty, value);
+
+  /// <summary>
+  /// Gets whether a control is hidden when dragged.
+  /// </summary>
+  public static bool GetHideWhenDragged(Control control)
+      => control.GetValue(HideWhenDraggedProperty);
+  /// <summary>
   /// Clears attached drag-and-drop properties from a control.
   /// Useful when cleaning up dynamically created controls or resetting drag state.
   /// </summary>
+  /// 
+
   internal static void CleanProperties(Control control) {
     control.ClearValue(IsRootOfDraggingInstanceProperty);
     control.ClearValue(DropCallbackProperty);

@@ -80,6 +80,7 @@ public class DraggingServiceInstance: IDisposable {
   private void EndDrag(object? sender, PointerEventArgs e) {
     foreach( var c in _ghostContainer.DraggingControls ) {//foreach dragged control call the drag end callback
       c.GetValue(DraggingServiceAttached.EndDragCallbackProperty).Invoke(new DraggingServiceDragEventsArgs(e, _ghostContainer.DraggingControls));
+      c.IsVisible = true; //make the original control visible again (in case it was hidden)
     }
     if( _droppingTo != null && _root.InputHitTest(e.GetPosition(_root)) != null ) {
       DraggingServiceDropEvent callback = _droppingTo.GetValue(DraggingServiceAttached.DropCallbackProperty);
@@ -113,7 +114,7 @@ public class DraggingServiceInstance: IDisposable {
         throw new InvalidOperationException(nameof(element) + "Control must have a non-zero size to be dragged.");
       }
       AddControlToGhostContainer(element, ghostContainer, root);
-
+      element.IsVisible = !element.GetValue(DraggingServiceAttached.HideWhenDraggedProperty);
     }
 
     if( DraggingServiceAttached.GetIsSelectedForMultiDrag(control) ) {  //if the currently dragged element is selected for multi-dragging then add all the selected controls to the ghost container
