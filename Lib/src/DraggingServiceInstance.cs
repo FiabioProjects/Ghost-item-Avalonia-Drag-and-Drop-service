@@ -144,7 +144,7 @@ public class DraggingServiceInstance: IDisposable {
   internal void AllowDrag(Control control) {
     SetBackgroundAndHitTesting(control);
     control.RemoveHandler(Control.PointerPressedEvent, StartControlDragging); // Remove any existing handler to avoid duplicates
-    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, DraggingServiceAttached.GetDragEventRoutingStrategy(control), true);
+    control.AddHandler(Control.PointerPressedEvent, StartControlDragging, DraggingServiceAttached.GetDragEventRoutingStrategy(control), false);
   }
 
   /// <summary>
