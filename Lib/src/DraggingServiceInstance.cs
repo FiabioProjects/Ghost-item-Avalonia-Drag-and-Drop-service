@@ -33,6 +33,7 @@ public class DraggingServiceInstance: IDisposable {
     _ghostContainer.Opacity = GhostOpacity;
     _root = panel;
     _defaultCursor = _root.Cursor;
+
     //From Avalonia Docs: an event starts always from the root and goes down to the target and then back up. So Bubbling handlers are called at the end. 
     panel.AddHandler(Panel.PointerMovedEvent, Drag, RoutingStrategies.Bubble, true);
     panel.AddHandler(Panel.PointerReleasedEvent, EndDrag, RoutingStrategies.Bubble, true);
@@ -44,6 +45,7 @@ public class DraggingServiceInstance: IDisposable {
       e.Pointer.Capture(_root);  //this is needed to listen to call EndDrag when the pointer is outside the root bounds (in the Drag method the pointer capture is released)
     }
   }
+  int i = 0;
   private void Drag(object? sender, PointerEventArgs e) {
     static bool IsDescendantOf(StyledElement? child, StyledElement ancestor) {
       StyledElement? ptr = child;
@@ -66,8 +68,6 @@ public class DraggingServiceInstance: IDisposable {
     e.Pointer.Capture(null); //little workaround to allow cursor styling
     _ghostContainer.IsVisible = true;
     _ghostContainer.Render(new Size(_root.Bounds.Width, _root.Bounds.Height), e.GetPosition(_root));
-    _root.Cursor = new Cursor(StandardCursorType.No);
-    _droppingTo = null;
 
     foreach( (Control dropTarget, int _) in _dropAllowedControlsSorted ) {
       if( DraggingServiceAttached.GetIsDropEnable(dropTarget) && IsDescendantOf(controlUnderPointer, dropTarget) ) { // Check if the control under the pointer is a descendant of the drop target && it has the dropping enable
@@ -76,6 +76,7 @@ public class DraggingServiceInstance: IDisposable {
         return;
       }
     }
+    _root.Cursor = new Cursor(StandardCursorType.No);
   }
   private void EndDrag(object? sender, PointerEventArgs e) {
     foreach( var c in _ghostContainer.DraggingControls ) {//foreach dragged control call the drag end callback
