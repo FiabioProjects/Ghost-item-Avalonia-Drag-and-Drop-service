@@ -361,9 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Demo/Demo.csproj
 /Demo.Browser/Demo.Browser.csproj
 /Demo.Desktop/Demo.Desktop.csproj
-/Demo
 /Demo.Browser
 /Demo.Desktop

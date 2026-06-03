@@ -1,0 +1,89 @@
+<UserControl
+    x:Class="AvaloniaApplication1.Demo.Views.MainView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Service"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:AvaloniaApplication1.Demo.ViewModels"
+    x:Name="DemoRoot"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:MainViewModel"
+    mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="70*,30*">
+        <Grid
+            x:Name="MainGrid"
+            Grid.Column="0"
+            ds:DraggingServiceAttached.IsRootOfDraggingInstance="True"
+            Background="AliceBlue"
+            ColumnDefinitions="*,*,*,*"
+            RowDefinitions="*,*">
+
+            <StackPanel
+                ds:DraggingServiceAttached.DropCallback="{Binding DropCallback}"
+                ds:DraggingServiceAttached.IsDropEnable="True"
+                Background="Black"
+                PointerReleased="StackPanel_PointerReleased">
+                <TextBlock>AAAAAAA</TextBlock>
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="1"
+                VerticalAlignment="Stretch"
+                ds:DraggingServiceAttached.DragCallback="{Binding DragCallback}"
+                ds:DraggingServiceAttached.IsDragEnable="True">
+                <TextBlock
+                    x:Name="T1"
+                    Margin="0,23,30,0"
+                    Padding="20"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ds:DraggingServiceAttached.DragCallback="{Binding DragCallback}"
+                    ds:DraggingServiceAttached.DragEventRoutingStrategy="Tunnel"
+                    ds:DraggingServiceAttached.DropCallback="{Binding DropCallback}"
+                    ds:DraggingServiceAttached.IsDragEnable="True"
+                    ds:DraggingServiceAttached.IsDropEnable="True"
+                    ds:DraggingServiceAttached.IsSelectedForMultiDrag="True"
+                    Background="Red"
+                    Foreground="Black"
+                    PointerPressed="TextBlock_PointerPressed_1"
+                    Text="{Binding Greeting}" />
+
+                <StackPanel VerticalAlignment="Stretch" Background="Blue">
+                    <TextBlock>AAAAAAA</TextBlock>
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock
+                x:Name="T2"
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ds:DraggingServiceAttached.DragCallback="{Binding DragCallback}"
+                ds:DraggingServiceAttached.DropCallback="{Binding DropCallback}"
+                ds:DraggingServiceAttached.HideWhenDragged="True"
+                ds:DraggingServiceAttached.IsDragEnable="True"
+                ds:DraggingServiceAttached.IsDropEnable="True"
+                ds:DraggingServiceAttached.SelectedForMultiDragCallback="{Binding SelectionCallback}"
+                Background="Blue"
+                Foreground="Black"
+                Text="MultiDragtest" />
+
+            <Button Background="BlanchedAlmond" Click="ToggleSelectionT2">TOGGLE SELECTION UP</Button>
+
+        </Grid>
+
+        <StackPanel Grid.Column="2" Background="Black">
+            <Button
+                Background="BlanchedAlmond"
+                Click="SetIsRootToFalse"
+                Content="DISPOSE ROOT" />
+        </StackPanel>
+    </Grid>
+</UserControl>
