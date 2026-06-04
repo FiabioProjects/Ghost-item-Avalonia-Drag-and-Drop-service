@@ -7,5 +7,6 @@ public partial class MainViewModel {
 
   public static DraggingServiceDropEvent DropCallback => ( args => { Debug.WriteLine("dropping callback Mainviewmodel"); } );
   public static DraggingServiceDragEvent DragCallback => ( args => { Debug.WriteLine("dragging callback Mainviewmodel"); } );
+  public static DraggingServiceDragEvent EndDragCallback => ( args => { Debug.WriteLine("dragging ended by Mainviewmodel"); } );
   public static DraggingServiceSelectionEvent SelectionCallback => ( args => { Debug.WriteLine("Selection callback Mainviewmodel"); } );
 }

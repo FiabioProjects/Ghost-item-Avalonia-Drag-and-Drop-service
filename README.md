@@ -36,7 +36,7 @@ xmlns:ds="clr-namespace:DraggingService;assembly=Simple-Avalonia-DragnDrop-Servi
 <Button Content="Drag me!"
 	local:DraggingServiceAttached.IsDragEnable="true"
         local:DraggingServiceAttached.DragCallback="{Binding OnDragCallback}"
-         local:DraggingServiceAttached.DragCallback="{Binding OnEndDragCallback}"/>
+         local:DraggingServiceAttached.EndDragCallback="{Binding OnEndDragCallback}"/>
 ```
 ```xml
 <TextBlock Content="Drop on me!"
